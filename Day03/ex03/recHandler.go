@@ -6,32 +6,9 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/elastic/go-elasticsearch/v7"
 )
-
-func middleware(f http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		line := r.Header.Get("Authorization")
-		if len(line) < 7 || !strings.HasPrefix(line, "Bearer ") {
-			http.Error(w, "Unauthorized", http.StatusBadRequest)
-			return
-		}
-		token, err := jwt.Parse(line[7:], func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte("alexisawesome"), nil
-		})
-		if err != nil || !token.Valid {
-			http.Error(w, fmt.Sprintf("Authorization error: %s\n", err), http.StatusBadRequest)
-			return
-		}
-		f(w, r)
-	}
-}
 
 func recHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
