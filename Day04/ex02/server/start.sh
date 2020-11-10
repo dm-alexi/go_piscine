@@ -1,0 +1,1 @@
+./server --tls-certificate cert.pem --tls-key key.pem --tls-ca ../../minica/minica.pem --tls-port 3333
