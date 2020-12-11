@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = ".;transmitter";
+
+import "google/protobuf/timestamp.proto";
+
+service Emitter {
+	rpc BeginTransmission(ConnectionRequest) returns (stream Quant) {}
+}
+
+message ConnectionRequest {
+	
+}
+
+message Quant {
+  string session_id = 1;
+  double frequency = 2;
+  google.protobuf.Timestamp time = 3;
+}
