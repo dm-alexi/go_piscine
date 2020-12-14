@@ -5,11 +5,14 @@ import (
 	"flag"
 	"io"
 	"log"
+	"time"
 
+	"github.com/go-pg/pg"
+	"github.com/go-pg/pg/orm"
 	"github.com/golang/protobuf/ptypes"
 
-	dist "github.com/dm-alexi/go_piscine/rush00/ex01/distribution"
-	pb "github.com/dm-alexi/go_piscine/rush00/ex01/transmitter"
+	dist "github.com/dm-alexi/go_piscine/rush00/ex02/distribution"
+	pb "github.com/dm-alexi/go_piscine/rush00/ex02/transmitter"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 )
@@ -41,12 +44,33 @@ func (s *server) BeginTransmission(in *pb.ConnectionRequest, stream pb.Emitter_B
 	}
 }
 
+// Anomaly struct in database
+type Anomaly struct {
+	SessionID string    `pg:"SessionID"`
+	Frequency float64   `pg:"Frequency"`
+	Time      time.Time `pg:"Time"`
+}
+
 func main() {
 	var k float64
 	flag.Float64Var(&k, "k", 5.0, "anomaly detection coefficient")
 	flag.Parse()
-	//var opts []grpc.DialOption
 	quants := make([]float64, initialTries)
+	// connect to database
+	db := pg.Connect(&pg.Options{
+		Addr:     ":5432",
+		User:     "rush",
+		Password: "rush",
+		Database: "rush",
+	})
+	defer db.Close()
+	err := db.Model(&Anomaly{}).CreateTable(&orm.CreateTableOptions{
+		IfNotExists: true,
+	})
+	if err != nil {
+		log.Fatalf("Database error: %v", err)
+	}
+	// connect to emitter
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("failed to connect to server: %v", err)
@@ -78,11 +102,15 @@ func main() {
 		} else if err != nil {
 			log.Fatalf("%v error: %v", client, err)
 		}
-		if i%initialTries == 0 {
+		if i%(100*initialTries) == 0 {
 			log.Printf("Processed signals: %d\n", i)
 		}
 		if quant.Frequency < nd.Mean-nd.Stddev*k || quant.Frequency > nd.Mean+nd.Stddev*k {
 			log.Printf("Anomaly detected: %v", quant)
+			_, err = db.Model(&Anomaly{SessionID: quant.GetSessionId(), Frequency: quant.GetFrequency(), Time: quant.GetTime().AsTime()}).Insert()
+			if err != nil {
+				log.Printf("Anomaly insertion error: %v", err)
+			}
 		}
 	}
 }
