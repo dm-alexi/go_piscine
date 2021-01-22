@@ -1,0 +1,43 @@
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	fmt.Println("Test 1:")
+	root := newNode(false)
+	root.Left = newNode(false)
+	root.Left.Left = newNode(false)
+	root.Left.Right = newNode(true)
+	root.Right = newNode(true)
+	printTree(root)
+	fmt.Println(areToysBalanced(root))
+	fmt.Println()
+	fmt.Println("Test 2:")
+	root = newNode(true)
+	root.Left = newNode(true)
+	root.Left.Left = newNode(true)
+	root.Left.Right = newNode(false)
+	root.Right = newNode(false)
+	root.Right.Left = newNode(true)
+	root.Right.Right = newNode(true)
+	printTree(root)
+	fmt.Println(areToysBalanced(root))
+	fmt.Println()
+	fmt.Println("Test 3:")
+	root = newNode(true)
+	root.Left = newNode(true)
+	root.Right = newNode(false)
+	printTree(root)
+	fmt.Println(areToysBalanced(root))
+	fmt.Println()
+	fmt.Println("Test 4:")
+	root = newNode(false)
+	root.Left = newNode(true)
+	root.Left.Right = newNode(true)
+	root.Right = newNode(false)
+	root.Right.Right = newNode(true)
+	printTree(root)
+	fmt.Println(areToysBalanced(root))
+}
