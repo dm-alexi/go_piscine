@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/heap"
+	"errors"
 )
 
 // Present is a structure for evaluating presents
@@ -40,10 +41,17 @@ func (h *PresentHeap) Pop() interface{} {
 	return x
 }
 
-func getCoolestPresent(presents []Present) Present {
+func getNCoolestPresents(presents []Present, n int) ([]Present, error) {
+	if n < 0 || n > len(presents) {
+		return nil, errors.New("invalid input")
+	}
 	h := &PresentHeap{}
 	for _, v := range presents {
 		heap.Push(h, v)
 	}
-	return heap.Pop(h).(Present)
+	res := make([]Present, n)
+	for i := 0; i < n; i++ {
+		res[i] = heap.Pop(h).(Present)
+	}
+	return res, nil
 }
